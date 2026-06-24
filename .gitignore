@@ -1,0 +1,34 @@
+# Dados brutos (CSVs grandes)
+data/raw/*.csv
+
+# Dados processados (gerados pelo pipeline)
+data/processed/*.parquet
+
+# Microdados do INEP (muito grandes para git)
+microdados_enem_2025/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Ambiente
+venv/
+.venv/
+env/
