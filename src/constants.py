@@ -188,3 +188,63 @@ CORES = {
     "Pública": "#8B4513",              # Terra — escola pública
     "Privada": "#4682B4",             # Aço — escola privada
 }
+
+# ------------------------------------------------------------
+# Nomes legíveis — para o dashboard acessível
+# ------------------------------------------------------------
+
+# Nomes completos dos estados (UF → nome)
+MAPA_UF_NOME = {
+    "AC": "Acre", "AL": "Alagoas", "AM": "Amazonas", "AP": "Amapá",
+    "BA": "Bahia", "CE": "Ceará", "DF": "Distrito Federal", "ES": "Espírito Santo",
+    "GO": "Goiás", "MA": "Maranhão", "MG": "Minas Gerais", "MS": "Mato Grosso do Sul",
+    "MT": "Mato Grosso", "PA": "Pará", "PB": "Paraíba", "PE": "Pernambuco",
+    "PI": "Piauí", "PR": "Paraná", "RJ": "Rio de Janeiro", "RN": "Rio Grande do Norte",
+    "RO": "Rondônia", "RR": "Roraima", "RS": "Rio Grande do Sul", "SC": "Santa Catarina",
+    "SE": "Sergipe", "SP": "São Paulo", "TO": "Tocantins",
+}
+
+# Regiões do Brasil (UF → região)
+MAPA_UF_REGIAO = {
+    "AC": "Norte", "AL": "Nordeste", "AM": "Norte", "AP": "Norte",
+    "BA": "Nordeste", "CE": "Nordeste", "DF": "Centro-Oeste", "ES": "Sudeste",
+    "GO": "Centro-Oeste", "MA": "Nordeste", "MG": "Sudeste", "MS": "Centro-Oeste",
+    "MT": "Centro-Oeste", "PA": "Norte", "PB": "Nordeste", "PE": "Nordeste",
+    "PI": "Nordeste", "PR": "Sul", "RJ": "Sudeste", "RN": "Nordeste",
+    "RO": "Norte", "RR": "Norte", "RS": "Sul", "SC": "Sul",
+    "SE": "Nordeste", "SP": "Sudeste", "TO": "Norte",
+}
+
+# Lista de regiões para filtros
+REGIOES = ["Norte", "Nordeste", "Sudeste", "Sul", "Centro-Oeste"]
+
+# Nomes legíveis para variáveis da regressão (usado no dashboard)
+MAPA_VARIAVEL_LABEL = {
+    "pct_mulher_negra": "% de mulheres negras no estado",
+    "renda_media": "Renda média do estado (R$)",
+    "pct_presente_uf": "Taxa de presença no estado",
+    "Intercept": "Intercepto (base)",
+}
+
+# Nomes legíveis para áreas do conhecimento
+MAPA_AREA_LABEL = {
+    "NU_NOTA_CN": "Ciências da Natureza",
+    "NU_NOTA_CH": "Ciências Humanas",
+    "NU_NOTA_LC": "Linguagens e Códigos",
+    "NU_NOTA_MT": "Matemática",
+    "NU_NOTA_REDACAO": "Redação",
+    "nota_media": "Média geral",
+}
+
+# GeoJSON dos estados brasileiros (para mapa coroplético)
+GEOJSON_URL = (
+    "https://raw.githubusercontent.com/codeforamerica/click_that_hood/"
+    "master/public/data/brazil-states.geojson"
+)
+
+# Cores para o dashboard acessível
+COR_INSIGHT = "#4CAF50"       # Verde suave — caixas de interpretação
+COR_DESTAQUE = "#E8820C"      # Âmbar — destaques/call-to-action
+COR_TERRA = "#8B4513"         # Siena — texto narrativo, grupos oprimidos
+COR_ACO = "#4682B4"           # Steel blue — grupos privilegiados
+COR_FUNDO = "#FFF8E7"         # Creme — fundo de caixas narrativas
