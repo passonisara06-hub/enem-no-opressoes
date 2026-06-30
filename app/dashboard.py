@@ -409,24 +409,32 @@ def render_secao_quem_falta():
     </div>
     """, unsafe_allow_html=True)
 
-    # Ausência por tipo de escola
+    # Ausência por tipo de escola (agregado por UF para o gráfico por estado)
     if "escola_tipo" in df_f.columns:
         st.subheader("Ausência por tipo de escola")
 
-        presenca_tipo = df_f.groupby("escola_tipo").agg(
+        # Agregar por UF × tipo de escola (formato esperado pela função de visualização)
+        presenca_tipo_uf = df_f.groupby(["uf", "escola_tipo"]).agg(
             n=("presente_ambos_dias", "size"),
             n_presentes=("presente_ambos_dias", "sum"),
         ).reset_index()
-        presenca_tipo["pct_ausente"] = (1 - presenca_tipo["n_presentes"] / presenca_tipo["n"]) * 100
+        presenca_tipo_uf["pct_ausente"] = (1 - presenca_tipo_uf["n_presentes"] / presenca_tipo_uf["n"]) * 100
 
         filtro_tipo = ["Pública", "Privada"]
         if tipo_escola != "Todas":
             filtro_tipo = [tipo_escola]
-        presenca_tipo_f = presenca_tipo[presenca_tipo["escola_tipo"].isin(filtro_tipo)]
+        presenca_tipo_f = presenca_tipo_uf[presenca_tipo_uf["escola_tipo"].isin(filtro_tipo)]
 
         if not presenca_tipo_f.empty:
             fig_aus = grafico_ausencia_por_tipo(presenca_tipo_f)
             st.plotly_chart(fig_aus, use_container_width=True)
+
+        # Resumo agregado (sem UF) para os números detalhados
+        presenca_tipo_agg = df_f.groupby("escola_tipo").agg(
+            n=("presente_ambos_dias", "size"),
+            n_presentes=("presente_ambos_dias", "sum"),
+        ).reset_index()
+        presenca_tipo_agg["pct_ausente"] = (1 - presenca_tipo_agg["n_presentes"] / presenca_tipo_agg["n"]) * 100
 
     # Ranking de estados por taxa de ausência
     if not df_desemp.empty and "pct_ausente_uf" in df_desemp.columns:
@@ -442,8 +450,8 @@ def render_secao_quem_falta():
 
     # Expander: dados brutos
     with st.expander("📊 Ver números detalhados"):
-        if "escola_tipo" in df_f.columns and "presenca_tipo" in dir():
-            st.dataframe(presenca_tipo, use_container_width=True, hide_index=True)
+        if "escola_tipo" in df_f.columns and "presenca_tipo_agg" in dir():
+            st.dataframe(presenca_tipo_agg, use_container_width=True, hide_index=True)
 
     # Download
     if not df_desemp.empty:
