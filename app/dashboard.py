@@ -21,9 +21,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from constants import (
     ANO, GRUPOS_PRINCIPAIS, ORDEM_GRUPOS, CORES,
-    ARQUIVO_PART_LIMPO, ARQUIVO_RES_LIMPO,
     ARQUIVO_METRICAS_DEMO, ARQUIVO_METRICAS_DESEMP,
     ARQUIVO_REGRESSAO_ECO, ARQUIVO_GAPS_REGIONAIS, ARQUIVO_TESTES_KRUSKAL,
+    ARQUIVO_PRESENCA_TIPO, ARQUIVO_NOTAS_TIPO,
     NOTAS_TODAS, MAPA_UF_NOME, MAPA_UF_REGIAO, REGIOES,
     MAPA_AREA_LABEL, MAPA_VARIAVEL_LABEL,
     COR_TERRA, COR_ACO, COR_DESTAQUE, COR_INSIGHT, COR_FUNDO,
@@ -101,20 +101,14 @@ st.markdown("""
 # ------------------------------------------------------------
 @st.cache_data
 def carregar_dados():
-    """Carrega todos os parquets processados."""
+    """Carrega os parquets agregados usados pelo painel.
+
+    Nota: o dashboard usa apenas agregados por UF/tipo de escola (pré-calculados
+    pelo pipeline). Os microdados individuais (participantes_limpo / resultados_limpo,
+    ~115 MB) não são carregados — todas as métricas escalares e os gráficos por tipo
+    de escola são derivados dos agregados, que somam ~40 KB.
+    """
     dados = {}
-    try:
-        dados["participantes"] = pd.read_parquet(ARQUIVO_PART_LIMPO)
-    except FileNotFoundError:
-        st.error(f"Arquivo não encontrado: {ARQUIVO_PART_LIMPO}. Execute `python src/ingestao.py` primeiro.")
-        st.stop()
-
-    try:
-        dados["resultados"] = pd.read_parquet(ARQUIVO_RES_LIMPO)
-    except FileNotFoundError:
-        st.error(f"Arquivo não encontrado: {ARQUIVO_RES_LIMPO}. Execute `python src/ingestao.py` primeiro.")
-        st.stop()
-
     try:
         dados["metricas_demo"] = pd.read_parquet(ARQUIVO_METRICAS_DEMO)
     except FileNotFoundError:
@@ -140,30 +134,52 @@ def carregar_dados():
     except FileNotFoundError:
         pass
 
+    try:
+        dados["presenca_tipo"] = pd.read_parquet(ARQUIVO_PRESENCA_TIPO)
+    except FileNotFoundError:
+        pass
+
+    try:
+        dados["notas_tipo"] = pd.read_parquet(ARQUIVO_NOTAS_TIPO)
+    except FileNotFoundError:
+        pass
+
     return dados
 
 
 dados = carregar_dados()
 
 # Dados derivados (computados uma vez)
-df_part = dados.get("participantes", pd.DataFrame())
-df_res = dados.get("resultados", pd.DataFrame())
 df_demo = dados.get("metricas_demo", pd.DataFrame())
 df_desemp = dados.get("metricas_desemp", pd.DataFrame())
 df_coefs = dados.get("coefs", pd.DataFrame())
 df_gaps = dados.get("gaps", pd.DataFrame())
 df_kruskal = dados.get("kruskal", pd.DataFrame())
+df_presenca_tipo = dados.get("presenca_tipo", pd.DataFrame())
+df_notas_tipo = dados.get("notas_tipo", pd.DataFrame())
 
-# Lista de UFs
-todos_ufs = sorted(df_part["uf"].unique()) if len(df_part) > 0 else []
+# Lista de UFs (derivada das métricas demográficas agregadas)
+todos_ufs = sorted(df_demo["uf"].unique()) if len(df_demo) > 0 else []
 
-# Métricas gerais (calculadas uma vez)
-total_inscritos = len(df_part) if len(df_part) > 0 else 0
-total_resultados = len(df_res) if len(df_res) > 0 else 0
-if total_resultados > 0 and "presente_ambos_dias" in df_res.columns:
-    pct_presente = df_res["presente_ambos_dias"].mean() * 100
+# Métricas gerais (calculadas uma vez a partir dos agregados por UF)
+# total de inscritos = soma dos totais por UF (n_total repete o total do UF em cada grupo)
+if len(df_demo) > 0 and "n_total" in df_demo.columns:
+    total_inscritos = int(df_demo.drop_duplicates("uf")["n_total"].sum())
+else:
+    total_inscritos = 0
+
+# Comparecimento nacional: presentes / total por UF (métricas_desempenho)
+if (
+    len(df_desemp) > 0
+    and "n_presentes_uf" in df_desemp.columns
+    and "n_total_uf" in df_desemp.columns
+    and df_desemp["n_total_uf"].sum() > 0
+):
+    total_resultados = int(df_desemp["n_total_uf"].sum())
+    pct_presente = df_desemp["n_presentes_uf"].sum() / df_desemp["n_total_uf"].sum() * 100
     pct_ausente = 100 - pct_presente
 else:
+    total_resultados = total_inscritos
     pct_presente = 67.4
     pct_ausente = 32.6
 
@@ -371,11 +387,9 @@ def render_secao_quem_falta():
     st.header("🚪 Quem falta à prova?")
     st.markdown("Quantos inscritos compareceram e quem tem mais chance de faltar.")
 
-    if df_res.empty:
+    if df_desemp.empty and df_presenca_tipo.empty:
         st.warning("Dados de resultados não disponíveis.")
         return
-
-    df_f = filtrar_por_uf_regiao(df_res, uf_selecionado, regiao_sel)
 
     # Filtro de tipo de escola
     tipo_escola = st.radio(
@@ -385,10 +399,19 @@ def render_secao_quem_falta():
         key="tipo_escola_ausencia",
     )
 
-    # Cards
-    total_f = len(df_f)
-    presentes_f = df_f["presente_ambos_dias"].sum() if "presente_ambos_dias" in df_f.columns else 0
-    pct_pres = presentes_f / total_f * 100 if total_f > 0 else 0
+    # Cards gerais (comparecimento) a partir das métricas por UF
+    df_desemp_f = filtrar_por_uf_regiao(df_desemp, uf_selecionado, regiao_sel)
+    if (
+        not df_desemp_f.empty
+        and "n_total_uf" in df_desemp_f.columns
+        and "n_presentes_uf" in df_desemp_f.columns
+    ):
+        total_f = int(df_desemp_f["n_total_uf"].sum())
+        presentes_f = int(df_desemp_f["n_presentes_uf"].sum())
+        pct_pres = presentes_f / total_f * 100 if total_f > 0 else 0
+    else:
+        total_f = 0
+        pct_pres = 0
     pct_aus = 100 - pct_pres
 
     col1, col2, col3 = st.columns(3)
@@ -409,16 +432,11 @@ def render_secao_quem_falta():
     </div>
     """, unsafe_allow_html=True)
 
-    # Ausência por tipo de escola (agregado por UF para o gráfico por estado)
-    if "escola_tipo" in df_f.columns:
+    # Ausência por tipo de escola (agregado por UF × tipo, pré-calculado)
+    if not df_presenca_tipo.empty:
         st.subheader("Ausência por tipo de escola")
 
-        # Agregar por UF × tipo de escola (formato esperado pela função de visualização)
-        presenca_tipo_uf = df_f.groupby(["uf", "escola_tipo"]).agg(
-            n=("presente_ambos_dias", "size"),
-            n_presentes=("presente_ambos_dias", "sum"),
-        ).reset_index()
-        presenca_tipo_uf["pct_ausente"] = (1 - presenca_tipo_uf["n_presentes"] / presenca_tipo_uf["n"]) * 100
+        presenca_tipo_uf = filtrar_por_uf_regiao(df_presenca_tipo, uf_selecionado, regiao_sel)
 
         filtro_tipo = ["Pública", "Privada"]
         if tipo_escola != "Todas":
@@ -429,17 +447,19 @@ def render_secao_quem_falta():
             fig_aus = grafico_ausencia_por_tipo(presenca_tipo_f)
             st.plotly_chart(fig_aus, use_container_width=True)
 
-        # Resumo agregado (sem UF) para os números detalhados
-        presenca_tipo_agg = df_f.groupby("escola_tipo").agg(
-            n=("presente_ambos_dias", "size"),
-            n_presentes=("presente_ambos_dias", "sum"),
-        ).reset_index()
-        presenca_tipo_agg["pct_ausente"] = (1 - presenca_tipo_agg["n_presentes"] / presenca_tipo_agg["n"]) * 100
+        # Resumo agregado (somando os totais por tipo de escola na seleção)
+        if not presenca_tipo_uf.empty:
+            presenca_tipo_agg = presenca_tipo_uf.groupby("escola_tipo").agg(
+                n=("n_total", "sum"),
+                n_presentes=("n_presentes", "sum"),
+            ).reset_index()
+            presenca_tipo_agg["pct_ausente"] = (
+                (1 - presenca_tipo_agg["n_presentes"] / presenca_tipo_agg["n"]) * 100
+            )
 
     # Ranking de estados por taxa de ausência
     if not df_desemp.empty and "pct_ausente_uf" in df_desemp.columns:
         st.subheader("Ranking de estados por taxa de ausência")
-        df_desemp_f = filtrar_por_uf_regiao(df_desemp, uf_selecionado, regiao_sel)
         fig_rank = grafico_ranking_uf(
             df_desemp_f, "pct_ausente_uf",
             "Estados com maior taxa de ausência",
@@ -450,7 +470,7 @@ def render_secao_quem_falta():
 
     # Expander: dados brutos
     with st.expander("📊 Ver números detalhados"):
-        if "escola_tipo" in df_f.columns and "presenca_tipo_agg" in dir():
+        if not df_presenca_tipo.empty and "presenca_tipo_agg" in dir():
             st.dataframe(presenca_tipo_agg, use_container_width=True, hide_index=True)
 
     # Download
@@ -557,10 +577,9 @@ def render_secao_diferenca_escola():
     # Radar por área (se UF selecionado)
     if uf_selecionado and not df_desemp.empty:
         st.subheader(f"Notas por área do conhecimento — {MAPA_UF_NOME.get(uf_selecionado, uf_selecionado)}")
-        try:
-            df_notas_tipo = pd.read_parquet(
-                Path(__file__).resolve().parent.parent / "data" / "processed" / "notas_tipo_escola.parquet"
-            )
+        if df_notas_tipo.empty:
+            st.info("Arquivo de notas por tipo de escola não encontrado. Execute `python src/grupos.py`.")
+        else:
             df_notas_uf = df_notas_tipo[df_notas_tipo["uf"] == uf_selecionado]
             df_pub = df_notas_uf[df_notas_uf["escola_tipo"] == "Pública"]
             df_pri = df_notas_uf[df_notas_uf["escola_tipo"] == "Privada"]
@@ -570,8 +589,6 @@ def render_secao_diferenca_escola():
                 st.plotly_chart(fig_radar, use_container_width=True)
             else:
                 st.info("Dados por tipo de escola não disponíveis para este estado.")
-        except FileNotFoundError:
-            st.info("Arquivo de notas por tipo de escola não encontrado. Execute `python src/grupos.py`.")
 
     # Download
     csv_download_button(df_gaps_f, f"gaps_publico_privado_{ANO}.csv")

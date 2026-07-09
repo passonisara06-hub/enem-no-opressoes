@@ -71,6 +71,43 @@ jupyter notebook notebooks/01_analise_completa.ipynb
 streamlit run app/dashboard.py
 ```
 
+### 6. Publicar online (Streamlit Community Cloud)
+
+O painel pode ficar hospedado gratuitamente 24/7 no **Streamlit Community Cloud**,
+gerando um link público do tipo `https://<seu-app>.streamlit.app`.
+
+**Como o deploy funciona (dados):** o dashboard consome apenas **agregados pequenos**
+(~40 KB, versionados no repo em `data/processed/`): `metricas_demograficas`,
+`metricas_desempenho`, `regressao_ecologica`, `gaps_regionais`, `testes_kruskal`,
+`presenca_tipo_escola` e `notas_tipo_escola`. Os microdados individuais
+(`participantes_limpo` / `resultados_limpo`, ~115 MB) **não são carregados** —
+todas as métricas escalares e os gráficos por tipo de escola são derivados dos
+agregados. Por isso o deploy é leve e não precisa dos CSVs brutos do INEP.
+
+**Passo a passo:**
+
+1. Garanta que o repo está no GitHub e atualizado:
+   ```bash
+   git add -A && git commit -m "Deploy: dashboard usa agregados; config Streamlit Cloud"
+   git push origin main
+   ```
+2. Acesse <https://share.streamlit.io> e entre com a conta GitHub
+   (`passonisara06-hub`).
+3. **New app** → selecione o repo `passonisara06-hub/enem-no-opressoes` → branch
+   `main`.
+4. Em **Main file path**, informe: `app/dashboard.py`
+5. Em **Python version**, use a mais recente disponível (3.13+).
+6. **Deploy!** A primeira build instala `requirements.txt` e inicia o app.
+   O link aparece no topo quando estiver pronto.
+
+**Observações:**
+- O app entra em sleep após ~7 dias sem visitas; a primeira visita após isso
+  "acorda" o app em alguns segundos.
+- Se quiser um deploy mais rápido (sem instalar `jupyter`/`notebook`, que o
+  dashboard não usa), crie um `requirements.txt` enxuto só para o Cloud — mas o
+  atual funciona sem alteração.
+- Configuração de tema está em `.streamlit/config.toml` (cores terra/âmbar).
+
 ## Variáveis centrais da análise
 
 ### PARTICIPANTES (demografia)

@@ -1,0 +1,20 @@
+# Configuração do Streamlit para o painel "Nó de Opressões — ENEM 2025".
+# Estes valores são aplicados tanto em `streamlit run` local quanto no deploy
+# no Streamlit Community Cloud.
+
+[theme]
+# Tema claro, alinhado à paleta do projeto (terra/âmbar/verde-insight).
+base = "light"
+primaryColor = "#8B4513"      # COR_TERRA — ações principais e seleção
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#FFF8E7"  # COR_FUNDO — fundo de sidebars/cards
+textColor = "#333333"
+font = "sans-serif"
+
+[server]
+# Permite que o app seja embutido em iframes (útil ao compartilhar o link).
+enableXsrfProtection = false
+maxUploadSize = 5
+
+[browser]
+gatherUsageStats = false

@@ -3,6 +3,16 @@ data/raw/*.csv
 
 # Dados processados (gerados pelo pipeline)
 data/processed/*.parquet
+# Exceções: agregados pequenos (~40 KB no total) usados pelo dashboard.
+# São versionados para que o deploy no Streamlit Community Cloud funcione sem
+# precisar dos microdados brutos (115 MB+, fora do repo).
+!data/processed/metricas_demograficas.parquet
+!data/processed/metricas_desempenho.parquet
+!data/processed/regressao_ecologica.parquet
+!data/processed/gaps_regionais.parquet
+!data/processed/testes_kruskal.parquet
+!data/processed/presenca_tipo_escola.parquet
+!data/processed/notas_tipo_escola.parquet
 
 # Microdados do INEP (muito grandes para git)
 microdados_enem_2025/
@@ -17,6 +27,10 @@ build/
 
 # Jupyter
 .ipynb_checkpoints/
+# Artefatos de notebook exportados (regeneráveis — não versionar)
+notebooks/*.executed.ipynb
+notebooks/*.html
+notebooks/*.pdf
 
 # IDE
 .vscode/

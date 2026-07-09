@@ -32,6 +32,9 @@ ARQUIVO_METRICAS_DESEMP = DIRETORIO_DADOS / "metricas_desempenho.parquet"
 ARQUIVO_REGRESSAO_ECO = DIRETORIO_DADOS / "regressao_ecologica.parquet"
 ARQUIVO_GAPS_REGIONAIS = DIRETORIO_DADOS / "gaps_regionais.parquet"
 ARQUIVO_TESTES_KRUSKAL = DIRETORIO_DADOS / "testes_kruskal.parquet"
+# Agregados por tipo de escola (pré-calculados — evita carregar microdados)
+ARQUIVO_PRESENCA_TIPO = DIRETORIO_DADOS / "presenca_tipo_escola.parquet"
+ARQUIVO_NOTAS_TIPO = DIRETORIO_DADOS / "notas_tipo_escola.parquet"
 
 # ------------------------------------------------------------
 # Grupos do nó de opressões
