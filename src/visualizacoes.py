@@ -124,13 +124,21 @@ def grafico_notas_por_tipo_escola(df: "pd.DataFrame", area: str = "nota_media") 
 # 3. Ausência por tipo de escola
 # ------------------------------------------------------------
 
-def grafico_ausencia_por_tipo(df: "pd.DataFrame") -> go.Figure:
+def grafico_ausencia_por_tipo(df: "pd.DataFrame", titulo: str = None) -> go.Figure:
     """
     Taxa de ausência por tipo de escola (Pública vs Privada) por estado.
 
     Espera DataFrame com colunas: uf, escola_tipo, pct_ausente
+    titulo: título personalizado (opcional; padrão automático)
     """
     df_plot = df[df["escola_tipo"].isin(["Pública", "Privada"])].copy()
+    tipos_presentes = df_plot["escola_tipo"].unique().tolist()
+
+    if titulo is None:
+        if len(tipos_presentes) == 1:
+            titulo = f"Ausência — {tipos_presentes[0]}"
+        else:
+            titulo = "Quem falta à prova? — Ausência por tipo de escola"
 
     fig = px.bar(
         df_plot,
@@ -140,34 +148,13 @@ def grafico_ausencia_por_tipo(df: "pd.DataFrame") -> go.Figure:
         color_discrete_map=CORES,
         orientation="h",
         barmode="group",
-        title="Quem falta à prova? — Ausência por tipo de escola",
+        title=titulo,
         labels={
             "pct_ausente": "Taxa de ausência (%)",
             "uf": "Estado",
             "escola_tipo": "Tipo de escola",
         },
     )
-
-    # Anotação contextual: comparação quando ambos os tipos estão presentes,
-    # média simples quando só um tipo está selecionado
-    tipos_presentes = df_plot["escola_tipo"].unique()
-    if len(tipos_presentes) == 2:
-        pub_mean = df_plot[df_plot["escola_tipo"] == "Pública"]["pct_ausente"].mean()
-        pri_mean = df_plot[df_plot["escola_tipo"] == "Privada"]["pct_ausente"].mean()
-        gap = pub_mean - pri_mean
-        fig.add_annotation(
-            text=f"Quem estuda em escola pública falta {gap:.1f} pp mais",
-            xref="paper", yref="paper", x=0.95, y=1.05,
-            showarrow=False, font=dict(size=14, color=COR_TERRA),
-        )
-    elif len(tipos_presentes) == 1:
-        tipo = tipos_presentes[0]
-        media = df_plot["pct_ausente"].mean()
-        fig.add_annotation(
-            text=f"Média: {media:.1f}% de ausência ({tipo})",
-            xref="paper", yref="paper", x=0.95, y=1.05,
-            showarrow=False, font=dict(size=14, color=COR_TERRA),
-        )
 
     fig.update_layout(legend_title_text="Tipo de escola")
     _aplicar_layout_acessivel(fig, max(600, len(df_plot["uf"].unique()) * 25))
