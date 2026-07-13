@@ -476,28 +476,6 @@ def render_secao_quem_falta():
             fig_aus = grafico_ausencia_por_tipo(presenca_tipo_f)
             st.plotly_chart(fig_aus, use_container_width=True)
 
-            # Contexto: gap ou média, dependendo do filtro
-            tipos_no_grafico = presenca_tipo_f["escola_tipo"].unique().tolist()
-            if len(tipos_no_grafico) == 2:
-                pub_media = presenca_tipo_f[presenca_tipo_f["escola_tipo"] == "Pública"]["pct_ausente"].mean()
-                pri_media = presenca_tipo_f[presenca_tipo_f["escola_tipo"] == "Privada"]["pct_ausente"].mean()
-                gap = pub_media - pri_media
-                st.markdown(
-                    f"<div class='insight-box'>"
-                    f"Quem estuda em <strong>escola pública</strong> falta {gap:.1f} pp mais."
-                    f"</div>",
-                    unsafe_allow_html=True,
-                )
-            else:
-                media = presenca_tipo_f["pct_ausente"].mean()
-                tipo_nome = tipos_no_grafico[0]
-                st.markdown(
-                    f"<div class='insight-box'>"
-                    f"Média de ausência — <strong>{tipo_nome}</strong>: {media:.1f}%."
-                    f"</div>",
-                    unsafe_allow_html=True,
-                )
-
         # Resumo agregado (somando os totais por tipo de escola na seleção)
         if not presenca_tipo_uf.empty:
             presenca_tipo_agg = presenca_tipo_uf.groupby("escola_tipo").agg(
