@@ -437,13 +437,29 @@ def render_secao_quem_falta():
     fig_donut = grafico_ausencia_geral(pct_pres, pct_aus)
     st.plotly_chart(fig_donut, use_container_width=True)
 
-    st.markdown("""
-    <div class="insight-box">
-    Quem estuda em <strong>escola pública</strong> falta mais. Não é preguiça —
-    é falta de transporte, saúde, cuidado com familiares, necessidade de trabalhar.
-    A ausência é o primeiro nó: quem não chega à prova já estava excluído antes dela.
-    </div>
-    """, unsafe_allow_html=True)
+    if tipo_escola == "Todas":
+        st.markdown("""
+        <div class="insight-box">
+        Quem estuda em <strong>escola pública</strong> falta mais. Não é preguiça —
+        é falta de transporte, saúde, cuidado com familiares, necessidade de trabalhar.
+        A ausência é o primeiro nó: quem não chega à prova já estava excluído antes dela.
+        </div>
+        """, unsafe_allow_html=True)
+    elif tipo_escola == "Pública":
+        st.markdown("""
+        <div class="insight-box">
+        Na escola pública, a ausência reflete desigualdade estrutural —
+        transporte precário, necessidade de trabalhar, cuidado com familiares.
+        Quem não chega à prova já estava excluído antes dela.
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div class="insight-box">
+        Mesmo na escola privada, há ausência — embora em menor grau.
+        Compare com a escola pública para ver o tamanho da desigualdade.
+        </div>
+        """, unsafe_allow_html=True)
 
     # Ausência por tipo de escola (agregado por UF × tipo, pré-calculado)
     if not df_presenca_tipo.empty:
