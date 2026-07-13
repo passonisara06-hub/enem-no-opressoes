@@ -399,19 +399,32 @@ def render_secao_quem_falta():
         key="tipo_escola_ausencia",
     )
 
-    # Cards gerais (comparecimento) a partir das métricas por UF
-    df_desemp_f = filtrar_por_uf_regiao(df_desemp, uf_selecionado, regiao_sel)
-    if (
-        not df_desemp_f.empty
-        and "n_total_uf" in df_desemp_f.columns
-        and "n_presentes_uf" in df_desemp_f.columns
-    ):
-        total_f = int(df_desemp_f["n_total_uf"].sum())
-        presentes_f = int(df_desemp_f["n_presentes_uf"].sum())
-        pct_pres = presentes_f / total_f * 100 if total_f > 0 else 0
+    # Cards gerais (comparecimento) — filtrar por tipo de escola se selecionado
+    if tipo_escola != "Todas" and not df_presenca_tipo.empty:
+        # Usar dados por tipo de escola para refletir o filtro
+        presenca_tipo_uf = filtrar_por_uf_regiao(df_presenca_tipo, uf_selecionado, regiao_sel)
+        presenca_tipo_f = presenca_tipo_uf[presenca_tipo_uf["escola_tipo"] == tipo_escola]
+        if not presenca_tipo_f.empty:
+            total_f = int(presenca_tipo_f["n_total"].sum())
+            presentes_f = int(presenca_tipo_f["n_presentes"].sum())
+            pct_pres = presentes_f / total_f * 100 if total_f > 0 else 0
+        else:
+            total_f = 0
+            pct_pres = 0
     else:
-        total_f = 0
-        pct_pres = 0
+        # Usar dados gerais por UF (todas as escolas)
+        df_desemp_f = filtrar_por_uf_regiao(df_desemp, uf_selecionado, regiao_sel)
+        if (
+            not df_desemp_f.empty
+            and "n_total_uf" in df_desemp_f.columns
+            and "n_presentes_uf" in df_desemp_f.columns
+        ):
+            total_f = int(df_desemp_f["n_total_uf"].sum())
+            presentes_f = int(df_desemp_f["n_presentes_uf"].sum())
+            pct_pres = presentes_f / total_f * 100 if total_f > 0 else 0
+        else:
+            total_f = 0
+            pct_pres = 0
     pct_aus = 100 - pct_pres
 
     col1, col2, col3 = st.columns(3)
@@ -458,7 +471,22 @@ def render_secao_quem_falta():
             )
 
     # Ranking de estados por taxa de ausência
-    if not df_desemp.empty and "pct_ausente_uf" in df_desemp.columns:
+    if tipo_escola != "Todas" and not df_presenca_tipo.empty:
+        # Ranking filtrado por tipo de escola
+        presenca_ranking = filtrar_por_uf_regiao(df_presenca_tipo, uf_selecionado, regiao_sel)
+        presenca_ranking = presenca_ranking[presenca_ranking["escola_tipo"] == tipo_escola]
+        if not presenca_ranking.empty and "pct_ausente" in presenca_ranking.columns:
+            st.subheader(f"Ranking de estados — {tipo_escola}")
+            fig_rank = grafico_ranking_uf(
+                presenca_ranking, "pct_ausente",
+                f"Estados com maior taxa de ausência — {tipo_escola}",
+                "Taxa de ausência (%)",
+                uf_destaque=uf_selecionado,
+            )
+            st.plotly_chart(fig_rank, use_container_width=True)
+    elif not df_desemp.empty and "pct_ausente_uf" in df_desemp.columns:
+        # Ranking geral (todas as escolas)
+        df_desemp_f = filtrar_por_uf_regiao(df_desemp, uf_selecionado, regiao_sel)
         st.subheader("Ranking de estados por taxa de ausência")
         fig_rank = grafico_ranking_uf(
             df_desemp_f, "pct_ausente_uf",
