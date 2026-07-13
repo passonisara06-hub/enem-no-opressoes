@@ -148,13 +148,23 @@ def grafico_ausencia_por_tipo(df: "pd.DataFrame") -> go.Figure:
         },
     )
 
-    # Anotação com gap médio em linguagem clara
-    if len(df_plot) > 0:
+    # Anotação contextual: comparação quando ambos os tipos estão presentes,
+    # média simples quando só um tipo está selecionado
+    tipos_presentes = df_plot["escola_tipo"].unique()
+    if len(tipos_presentes) == 2:
         pub_mean = df_plot[df_plot["escola_tipo"] == "Pública"]["pct_ausente"].mean()
         pri_mean = df_plot[df_plot["escola_tipo"] == "Privada"]["pct_ausente"].mean()
         gap = pub_mean - pri_mean
         fig.add_annotation(
             text=f"Quem estuda em escola pública falta {gap:.1f} pp mais",
+            xref="paper", yref="paper", x=0.95, y=1.05,
+            showarrow=False, font=dict(size=14, color=COR_TERRA),
+        )
+    elif len(tipos_presentes) == 1:
+        tipo = tipos_presentes[0]
+        media = df_plot["pct_ausente"].mean()
+        fig.add_annotation(
+            text=f"Média: {media:.1f}% de ausência ({tipo})",
             xref="paper", yref="paper", x=0.95, y=1.05,
             showarrow=False, font=dict(size=14, color=COR_TERRA),
         )
