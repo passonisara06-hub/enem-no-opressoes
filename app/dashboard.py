@@ -147,9 +147,6 @@ def carregar_dados():
     return dados
 
 
-# Forçar renovação de cache a cada nova versão do código
-# bump: v2 — remove anotação 'pp mais' do gráfico de ausência
-st.cache_data.clear()
 dados = carregar_dados()
 
 # Dados derivados (computados uma vez)
