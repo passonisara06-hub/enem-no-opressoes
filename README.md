@@ -169,6 +169,10 @@ agregados. Por isso o deploy é leve e não precisa dos CSVs brutos do INEP.
 3. **Tipo de escola com ~64% de "Não respondeu"**: `TP_DEPENDENCIA_ADM_ESC` é ausente para a maioria dos inscritos
 4. **Gênero binário**: O questionário INEP não captura identidade de gênero
 5. **Raça por autodeclaração**: Captura identidade, não determinação racial objetiva
+6. **Multicolinearidade raça-renda**: `% de mulheres negras` e `renda média` têm correlação de −0.76 no nível UF — são teoricamente articuladas (nó de opressões), mas o modelo não separa efeitos "puros"
+7. **"Não sei" nos indicadores de capital herdado**: Excluído dos indicadores sintéticos e dos gráficos (é ausência de informação, não classe de origem); 4.5% das mães e 12% dos pais têm "Não sei" na escolaridade/ocupação
+8. **Kruskal-Wallis com n=9 por grupo**: Teste de tercis de ausência com 27 UFs (n=9 por grupo) — fragilidade estatística, direção consistente mas robustez limitada
+9. **Escolaridade dos pais — categorias D e E quase idênticas**: INEP D = "completou 8ª/9º, não Médio" e E = "completou Médio, não Faculdade" — ambas mapeadas como "Médio completo" e "Médio completo (sem superior)" respetivamente
 
 ## Referências teóricas
 
