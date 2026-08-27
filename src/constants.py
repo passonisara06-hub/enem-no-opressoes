@@ -35,6 +35,9 @@ ARQUIVO_TESTES_KRUSKAL = DIRETORIO_DADOS / "testes_kruskal.parquet"
 # Agregados por tipo de escola (pré-calculados — evita carregar microdados)
 ARQUIVO_PRESENCA_TIPO = DIRETORIO_DADOS / "presenca_tipo_escola.parquet"
 ARQUIVO_NOTAS_TIPO = DIRETORIO_DADOS / "notas_tipo_escola.parquet"
+# Agregados das novas análises (trabalho reprodutivo + capital herdado)
+ARQUIVO_TRABALHO_REPRODUTIVO = DIRETORIO_DADOS / "trabalho_reprodutivo.parquet"
+ARQUIVO_CAPITAL_HERDADO = DIRETORIO_DADOS / "capital_herdado.parquet"
 
 # ------------------------------------------------------------
 # Grupos do nó de opressões
@@ -142,6 +145,134 @@ MAPA_ENSINO = {
     1: "Regular",
     2: "Educação Especial",
 }
+
+# ------------------------------------------------------------
+# Trabalho reprodutivo — proxies de carga de cuidado e
+# infraestrutura doméstica (PARTICIPANTES)
+# ------------------------------------------------------------
+
+# Q008 — contrata empregado(a) doméstico(a): terceirização do cuidado
+MAPA_EMPREGADO_DOMESTICO = {
+    "A": "Não",
+    "B": "Sim, 1–2 dias/semana",
+    "C": "Sim, 3–4 dias/semana",
+    "D": "Sim, 5+ dias/semana",
+}
+
+# Q009 — banheiro na residência (infraestrutura básica)
+MAPA_BANHEIRO = {
+    "A": "Não",
+    "B": "Sim, um",
+    "C": "Sim, dois",
+    "D": "Sim, três ou mais",
+}
+
+# Q015 — máquina de lavar roupa (infraestrutura que reduz carga doméstica)
+MAPA_MAQUINA_LAVAR = {
+    "A": "Não",
+    "B": "Sim",
+}
+
+# Q005 — nº de pessoas na residência (carga de cuidado)
+# Faixas analíticas: morar sozinho, núcleo pequeno, núcleo grande, família extensa
+BINS_PESSOAS_RESIDENCIA = [0, 1, 2, 4, 6, 99]
+LABELS_PESSOAS_RESIDENCIA = [
+    "Mora sozinho(a)",
+    "2 pessoas",
+    "3–4 pessoas",
+    "5–6 pessoas",
+    "7+ pessoas",
+]
+
+# TP_ESTADO_CIVIL — estado civil (proxy de responsabilidade familiar)
+MAPA_ESTADO_CIVIL = {
+    0: "Não informado",
+    1: "Solteiro(a)",
+    2: "Casado(a)/União estável",
+    3: "Divorciado(a)/Separado(a)",
+    4: "Viúvo(a)",
+}
+
+# TP_FAIXA_ETARIA — faixa etária (proxy de fase de vida / responsabilidade)
+MAPA_FAIXA_ETARIA = {
+    1: "Menor de 17",
+    2: "17",
+    3: "18",
+    4: "19",
+    5: "20",
+    6: "21",
+    7: "22",
+    8: "23",
+    9: "24",
+    10: "25",
+    11: "26–30",
+    12: "31–35",
+    13: "36–40",
+    14: "41–45",
+    15: "46–50",
+    16: "51–55",
+    17: "56–60",
+    18: "61–65",
+    19: "66–70",
+    20: "Maior de 70",
+}
+
+# Faixas etárias agrupadas para análise de responsabilidade familiar
+BINS_FAIXA_ETARIA = [0, 10, 11, 13, 20]
+LABELS_FAIXA_ETARIA_GRUPO = [
+    "Jovem (até 25)",
+    "Adulto jovem (26–35)",
+    "Adulto (36–45)",
+    "Adulto maduro (46+)",
+]
+
+# ------------------------------------------------------------
+# Educação emancipadora — capital herdado (PARTICIPANTES)
+# ------------------------------------------------------------
+
+# Q001/Q002 — escolaridade do pai/mãe (capital cultural herdado)
+MAPA_ESCOLARIDADE_PAIS = {
+    "A": "Nunca estudou",
+    "B": "Fundamental incompleto",
+    "C": "Fundamental completo",
+    "D": "Médio completo",
+    "E": "Superior incompleto",
+    "F": "Superior completo",
+    "G": "Pós-graduação",
+    "H": "Não sei",
+}
+
+# Q003/Q004 — ocupação do pai/mãe (classe de origem)
+# Grupos ordenados do questionário INEP (1 = trabalho manual/agrário,
+# 5 = profissões liberais/direção)
+MAPA_OCUPACAO_PAIS = {
+    "A": "Grupo 1 — Trabalho rural/manual",
+    "B": "Grupo 2 — Serviços domésticos/vendas",
+    "C": "Grupo 3 — Operário/técnico",
+    "D": "Grupo 4 — Professor/técnico/pequeno negócio",
+    "E": "Grupo 5 — Profissional liberal/direção",
+    "F": "Não sei",
+}
+
+# Ordem analítica da classe de origem (1 = mais oprimida, 5 = mais privilegiada)
+ORDEM_OCUPACAO = [
+    "Grupo 1 — Trabalho rural/manual",
+    "Grupo 2 — Serviços domésticos/vendas",
+    "Grupo 3 — Operário/técnico",
+    "Grupo 4 — Professor/técnico/pequeno negócio",
+    "Grupo 5 — Profissional liberal/direção",
+]
+
+# Escolaridade dos pais — ordem analítica (capital cultural)
+ORDEM_ESCOLARIDADE = [
+    "Nunca estudou",
+    "Fundamental incompleto",
+    "Fundamental completo",
+    "Médio completo",
+    "Superior incompleto",
+    "Superior completo",
+    "Pós-graduação",
+]
 
 # ------------------------------------------------------------
 # Mapeamentos — Resultados (desempenho)

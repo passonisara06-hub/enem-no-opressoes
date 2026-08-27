@@ -25,6 +25,7 @@ enem_no_opressoes/
 │   ├── constants.py      # Constantes centralizadas (mapeamentos, cores, paths)
 │   ├── ingestao.py       # Leitura e recodificação dos dois arquivos
 │   ├── grupos.py         # Métricas agregadas por UF e tipo de escola
+│   ├── novas_analises.py # Métricas de trabalho reprodutivo e capital herdado
 │   ├── inferencial.py    # Regressão ecológica e testes agregados
 │   └── visualizacoes.py  # Funções de gráficos reutilizáveis
 ├── notebooks/
@@ -58,6 +59,7 @@ ln -sf /caminho/para/microdados_enem_2025/DADOS/RESULTADOS_2025.csv data/raw/RES
 ```bash
 python3 src/ingestao.py        # gera participantes_limpo.parquet e resultados_limpo.parquet
 python3 src/grupos.py          # gera metricas_demograficas.parquet e metricas_desempenho.parquet
+python3 src/novas_analises.py  # gera trabalho_reprodutivo_*.parquet e capital_herdado_*.parquet
 python3 src/inferencial.py     # gera regressao_ecologica.parquet, gaps_regionais.parquet, testes_kruskal.parquet
 ```
 
@@ -119,6 +121,22 @@ agregados. Por isso o deploy é leve e não precisa dos CSVs brutos do INEP.
 | `TP_ST_CONCLUSAO` | Situação de conclusão do EM | Contexto |
 | `TP_ENSINO` | Tipo de ensino (Regular/Especial) | Contexto |
 | `SG_UF_PROVA` | UF da prova | Agregação regional |
+
+### PARTICIPANTES — trabalho reprodutivo (novas análises)
+| Variável INEP | Descrição | Uso no projeto |
+|---|---|---|
+| `Q008` | Contrata empregado(a) doméstico(a) | Terceirização do cuidado |
+| `Q005` | Nº de pessoas na residência | Carga de cuidado |
+| `Q015` | Máquina de lavar roupa | Infraestrutura que reduz carga doméstica |
+| `Q009` | Banheiro na residência | Infraestrutura básica |
+| `TP_ESTADO_CIVIL` | Estado civil | Responsabilidade familiar |
+| `TP_FAIXA_ETARIA` | Faixa etária | Fase de vida / responsabilidade |
+
+### PARTICIPANTES — capital herdado (novas análises)
+| Variável INEP | Descrição | Uso no projeto |
+|---|---|---|
+| `Q001`/`Q002` | Escolaridade do pai/mãe | Capital cultural herdado |
+| `Q003`/`Q004` | Ocupação do pai/mãe | Classe de origem |
 
 ### RESULTADOS (desempenho)
 | Variável INEP | Descrição | Uso no projeto |

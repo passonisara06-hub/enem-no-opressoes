@@ -28,6 +28,7 @@ from constants import (
     MAPA_AREA_LABEL, MAPA_VARIAVEL_LABEL,
     COR_TERRA, COR_ACO, COR_DESTAQUE, COR_INSIGHT, COR_FUNDO,
     GEOJSON_URL,
+    ORDEM_OCUPACAO, ORDEM_ESCOLARIDADE,
 )
 from visualizacoes import (
     grafico_composicao_demografica,
@@ -40,6 +41,8 @@ from visualizacoes import (
     grafico_dispersao_tendencia,
     grafico_radar_por_area,
     grafico_ranking_uf,
+    grafico_barras_empilhadas,
+    grafico_scatter_ecologico,
 )
 
 # ------------------------------------------------------------
@@ -144,6 +147,25 @@ def carregar_dados():
     except FileNotFoundError:
         pass
 
+    # Novas análises — trabalho reprodutivo
+    for nome in ["empregado_domestico", "maquina_lavar", "faixa_pessoas"]:
+        try:
+            dados[f"tr_{nome}"] = pd.read_parquet(
+                ARQUIVO_METRICAS_DEMO.parent / f"trabalho_reprodutivo_{nome}.parquet"
+            )
+        except FileNotFoundError:
+            pass
+
+    # Novas análises — capital herdado
+    for nome in ["escolaridade_pai", "escolaridade_mae",
+                 "ocupacao_pai", "ocupacao_mae", "sintetico"]:
+        try:
+            dados[f"ch_{nome}"] = pd.read_parquet(
+                ARQUIVO_METRICAS_DEMO.parent / f"capital_herdado_{nome}.parquet"
+            )
+        except FileNotFoundError:
+            pass
+
     return dados
 
 
@@ -157,6 +179,18 @@ df_gaps = dados.get("gaps", pd.DataFrame())
 df_kruskal = dados.get("kruskal", pd.DataFrame())
 df_presenca_tipo = dados.get("presenca_tipo", pd.DataFrame())
 df_notas_tipo = dados.get("notas_tipo", pd.DataFrame())
+
+# Novas análises — trabalho reprodutivo
+df_tr_empregado = dados.get("tr_empregado_domestico", pd.DataFrame())
+df_tr_maquina = dados.get("tr_maquina_lavar", pd.DataFrame())
+df_tr_pessoas = dados.get("tr_faixa_pessoas", pd.DataFrame())
+
+# Novas análises — capital herdado
+df_ch_esc_pai = dados.get("ch_escolaridade_pai", pd.DataFrame())
+df_ch_esc_mae = dados.get("ch_escolaridade_mae", pd.DataFrame())
+df_ch_ocu_pai = dados.get("ch_ocupacao_pai", pd.DataFrame())
+df_ch_ocu_mae = dados.get("ch_ocupacao_mae", pd.DataFrame())
+df_ch_sintetico = dados.get("ch_sintetico", pd.DataFrame())
 
 # Lista de UFs (derivada das métricas demográficas agregadas)
 todos_ufs = sorted(df_demo["uf"].unique()) if len(df_demo) > 0 else []
@@ -735,15 +769,220 @@ def render_secao_o_que_revela():
 
 
 # ============================================================
+# SEÇÃO 5: Trabalho reprodutivo — quem carrega o cuidado?
+# ============================================================
+def render_secao_trabalho_reprodutivo():
+    """Aba 5: Carga de cuidado e infraestrutura doméstica por estado."""
+    st.header("🧺 Trabalho reprodutivo: quem carrega o cuidado?")
+    st.markdown(
+        "O trabalho de cuidar da casa e das pessoas não é pago, mas consome tempo "
+        "e energia — e pesa mais sobre quem já é oprimido. Veja como isso aparece "
+        "no perfil de quem faz o ENEM."
+    )
+
+    if df_tr_empregado.empty:
+        st.warning(
+            "Dados de trabalho reprodutivo não disponíveis. "
+            "Execute `python src/novas_analises.py`."
+        )
+        return
+
+    # Cards de contexto
+    col1, col2 = st.columns(2)
+    if not df_tr_maquina.empty:
+        df_f = filtrar_por_uf_regiao(df_tr_maquina, uf_selecionado, regiao_sel)
+        sem_maq = df_f[df_f["categoria"] == "Não"]["pct"].mean()
+        col1.metric("Sem máquina de lavar", f"{sem_maq:.0f}%",
+                    help="% dos inscritos sem máquina de lavar — mais tempo gasto em tarefas domésticas")
+    if not df_tr_empregado.empty:
+        df_f = filtrar_por_uf_regiao(df_tr_empregado, uf_selecionado, regiao_sel)
+        sem_emp = df_f[df_f["categoria"] == "Não"]["pct"].mean()
+        col2.metric("Sem empregada doméstica", f"{sem_emp:.0f}%",
+                    help="% que não contrata empregada doméstica — cuidado não terceirizado")
+
+    st.markdown("""
+    <div class="insight-box">
+    <strong>O que isso significa?</strong><br>
+    Quem não tem máquina de lavar, não contrata empregada doméstica e mora em
+    casa cheia gasta mais horas em <strong>trabalho reprodutivo</strong> — o cuidado
+    da casa e das pessoas. Esse tempo não aparece na nota, mas decide quem
+    <em>consegue</em> estudar e chegar à prova.
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Terceirização do cuidado (empregada doméstica) — primeiro
+    st.subheader("Terceirização do cuidado (empregada doméstica)")
+    if not df_tr_empregado.empty:
+        df_f = filtrar_por_uf_regiao(df_tr_empregado, uf_selecionado, regiao_sel)
+        fig = grafico_barras_empilhadas(
+            df_f, "Empregada doméstica",
+            "Quem contrata empregada doméstica? — por estado",
+            "Proporção (%)",
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Infraestrutura doméstica
+    st.subheader("Infraestrutura doméstica por estado")
+    if not df_tr_maquina.empty:
+        df_f = filtrar_por_uf_regiao(df_tr_maquina, uf_selecionado, regiao_sel)
+        fig = grafico_barras_empilhadas(
+            df_f, "Máquina de lavar",
+            "Quem tem máquina de lavar? — por estado",
+            "Proporção (%)",
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Carga de cuidado: pessoas na residência
+    st.subheader("Carga de cuidado: quantas pessoas moram na residência?")
+    if not df_tr_pessoas.empty:
+        df_f = filtrar_por_uf_regiao(df_tr_pessoas, uf_selecionado, regiao_sel)
+        fig = grafico_barras_empilhadas(
+            df_f, "Pessoas na residência",
+            "Tamanho da residência — por estado",
+            "Proporção (%)",
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Download
+    if not df_tr_empregado.empty:
+        csv_download_button(
+            filtrar_por_uf_regiao(df_tr_empregado, uf_selecionado, regiao_sel),
+            f"trabalho_reprodutivo_{ANO}.csv",
+        )
+
+
+# ============================================================
+# SEÇÃO 6: Educação emancipadora — de onde se parte?
+# ============================================================
+def render_secao_educacao_emancipadora():
+    """Aba 6: Capital herdado (escolaridade e ocupação dos pais) por estado."""
+    st.header("🌱 Educação emancipadora: de onde se parte?")
+    st.markdown(
+        "A educação que emancipa não começa do zero: começa de onde cada um parte. "
+        "A escolaridade e a ocupação dos pais são o <strong>capital herdado</strong> "
+        "que abre ou fecha portas antes mesmo da prova."
+    )
+
+    if df_ch_esc_mae.empty:
+        st.warning(
+            "Dados de capital herdado não disponíveis. "
+            "Execute `python src/novas_analises.py`."
+        )
+        return
+
+    # Cards de contexto
+    col1, col2, col3 = st.columns(3)
+    if not df_ch_sintetico.empty:
+        df_f = filtrar_por_uf_regiao(df_ch_sintetico, uf_selecionado, regiao_sel)
+        col1.metric("Mães com superior completo", f"{df_f['pct_mae_superior'].mean():.0f}%",
+                    help="% de inscritos cuja mãe tem ensino superior completo ou pós")
+        col2.metric("Mães em profissões liberais", f"{df_f['pct_mae_liberal'].mean():.0f}%",
+                    help="% de inscritos cuja mãe é profissional liberal/direção")
+        col3.metric("Pais em trabalho rural/manual", f"{df_f['pct_pai_rural'].mean():.0f}%",
+                    help="% de inscritos cujo pai trabalha no campo/manual")
+
+    st.markdown("""
+    <div class="insight-box">
+    <strong>O que isso significa?</strong><br>
+    Ter uma mãe com ensino superior ou em profissão liberal é um <strong>ponto de
+    partida</strong> que a escola pública não consegue igualar sozinha. A educação
+    emancipadora precisa reconhecer essa desigualdade de origem — não para culpar
+    quem parte de baixo, mas para exigir que o sistema compense.
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Escolaridade da mãe
+    st.subheader("Escolaridade da mãe por estado")
+    if not df_ch_esc_mae.empty:
+        df_f = filtrar_por_uf_regiao(df_ch_esc_mae, uf_selecionado, regiao_sel)
+        fig = grafico_barras_empilhadas(
+            df_f, "Escolaridade da mãe",
+            "Até onde a mãe estudou? — por estado",
+            "Proporção (%)",
+            ordem=ORDEM_ESCOLARIDADE,
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Ocupação da mãe (classe de origem)
+    st.subheader("Ocupação da mãe (classe de origem) por estado")
+    if not df_ch_ocu_mae.empty:
+        df_f = filtrar_por_uf_regiao(df_ch_ocu_mae, uf_selecionado, regiao_sel)
+        fig = grafico_barras_empilhadas(
+            df_f, "Ocupação da mãe",
+            "Ocupação da mãe — por estado",
+            "Proporção (%)",
+            ordem=ORDEM_OCUPACAO,
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Correlação ecológica: capital herdado × desempenho
+    st.subheader("Capital herdado e desempenho: o que os estados revelam?")
+    if not df_ch_sintetico.empty and not df_desemp.empty:
+        df_merge = df_ch_sintetico.merge(df_desemp, on="uf", how="inner")
+        if "pct_mae_superior" in df_merge.columns and "nota_media_uf" in df_merge.columns:
+            fig = grafico_scatter_ecologico(
+                df_merge,
+                x="pct_mae_superior",
+                y="nota_media_uf",
+                titulo="Mães com superior completo × nota média por estado",
+                xlabel="% de inscritos com mãe de nível superior",
+                ylabel="Nota média do estado",
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+            st.markdown("""
+            <div class="insight-box">
+            Estados com mais mães de nível superior tendem a ter notas médias maiores.
+            Isso <strong>não é mérito individual</strong> — é o peso do capital herdado:
+            quem nasce em casa com mais estudo parte de um lugar mais alto.
+            </div>
+            """, unsafe_allow_html=True)
+
+    # Correlação ecológica: capital herdado × desigualdade escolar
+    st.subheader("Capital herdado e desigualdade escolar: o que os estados revelam?")
+    if not df_ch_sintetico.empty and not df_gaps.empty:
+        df_merge = df_ch_sintetico.merge(df_gaps, on="uf", how="inner")
+        if "pct_mae_superior" in df_merge.columns and "gap_publico_privado" in df_merge.columns:
+            fig = grafico_scatter_ecologico(
+                df_merge,
+                x="pct_mae_superior",
+                y="gap_publico_privado",
+                titulo="Mães com superior completo × diferença pública-privada por estado",
+                xlabel="% de inscritos com mãe de nível superior",
+                ylabel="Gap pública × privada (pontos)",
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+            st.markdown("""
+            <div class="insight-box">
+            Estados com mais mães de nível superior tendem a ter <strong>menor
+            desigualdade entre escola pública e privada</strong>. Onde o capital
+            herdado é mais distribuído, a escola pública consegue se aproximar mais
+            da privada — o que mostra que a desigualdade escolar não é natural,
+            é construída.
+            </div>
+            """, unsafe_allow_html=True)
+
+    # Download
+    if not df_ch_esc_mae.empty:
+        csv_download_button(
+            filtrar_por_uf_regiao(df_ch_esc_mae, uf_selecionado, regiao_sel),
+            f"capital_herdado_{ANO}.csv",
+        )
+
+
+# ============================================================
 # RENDERIZAÇÃO PRINCIPAL
 # ============================================================
 render_hero()
 
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "🙋 Quem faz o ENEM?",
     "🚪 Quem falta à prova?",
     "🏫 Que diferença a escola faz?",
     "🔬 O que os números revelam?",
+    "🧺 Trabalho reprodutivo",
+    "🌱 Educação emancipadora",
 ])
 
 with tab1:
@@ -757,6 +996,12 @@ with tab3:
 
 with tab4:
     render_secao_o_que_revela()
+
+with tab5:
+    render_secao_trabalho_reprodutivo()
+
+with tab6:
+    render_secao_educacao_emancipadora()
 
 # Footer
 st.markdown("---")

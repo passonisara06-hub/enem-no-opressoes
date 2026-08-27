@@ -24,6 +24,11 @@ from constants import (
     MAPA_RACA, MAPA_RACA_GRUPO, MAPA_SEXO, MAPA_RENDA_REAIS,
     MAPA_CONCLUSAO, MAPA_ENSINO, MAPA_DEPENDENCIA_ADM, MAPA_ESCOLA_TIPO,
     BINS_RENDA, LABELS_RENDA, NOTAS_TODAS, GRUPOS_NO,
+    MAPA_EMPREGADO_DOMESTICO, MAPA_BANHEIRO, MAPA_MAQUINA_LAVAR,
+    BINS_PESSOAS_RESIDENCIA, LABELS_PESSOAS_RESIDENCIA,
+    MAPA_ESTADO_CIVIL, MAPA_FAIXA_ETARIA,
+    BINS_FAIXA_ETARIA, LABELS_FAIXA_ETARIA_GRUPO,
+    MAPA_ESCOLARIDADE_PAIS, MAPA_OCUPACAO_PAIS,
 )
 
 # ------------------------------------------------------------
@@ -45,6 +50,17 @@ COLUNAS_PARTICIPANTES = [
     "TP_ST_CONCLUSAO",       # Situação de conclusão do EM
     "TP_ENSINO",             # Tipo de ensino
     "IN_TREINEIRO",          # Treineiro
+    # Trabalho reprodutivo — carga de cuidado e infraestrutura doméstica
+    "TP_ESTADO_CIVIL",       # Estado civil (responsabilidade familiar)
+    "Q005",                  # Nº de pessoas na residência
+    "Q008",                  # Contrata empregado(a) doméstico(a)
+    "Q009",                  # Banheiro na residência
+    "Q015",                  # Máquina de lavar roupa
+    # Educação emancipadora — capital herdado
+    "Q001",                  # Escolaridade do pai
+    "Q002",                  # Escolaridade da mãe
+    "Q003",                  # Ocupação do pai
+    "Q004",                  # Ocupação da mãe
 ]
 
 COLUNAS_RESULTADOS = [
@@ -147,6 +163,38 @@ def limpar_participantes(df: pd.DataFrame) -> pd.DataFrame:
 
     # --- Treineiro ---
     df["treineiro"] = df["IN_TREINEIRO"].map({0: "Não", 1: "Sim"})
+
+    # --- Trabalho reprodutivo: carga de cuidado e infraestrutura doméstica ---
+    # Q008 — terceirização do cuidado (contrata empregado doméstico)
+    df["empregado_domestico"] = df["Q008"].map(MAPA_EMPREGADO_DOMESTICO).fillna("Não informado")
+    # Q009 — banheiro (infraestrutura básica)
+    df["banheiro"] = df["Q009"].map(MAPA_BANHEIRO).fillna("Não informado")
+    # Q015 — máquina de lavar (infraestrutura que reduz carga doméstica)
+    df["maquina_lavar"] = df["Q015"].map(MAPA_MAQUINA_LAVAR).fillna("Não informado")
+    # Q005 — nº de pessoas na residência (carga de cuidado)
+    df["n_pessoas_residencia"] = pd.to_numeric(df["Q005"], errors="coerce")
+    df["faixa_pessoas_residencia"] = pd.cut(
+        df["n_pessoas_residencia"],
+        bins=BINS_PESSOAS_RESIDENCIA,
+        labels=LABELS_PESSOAS_RESIDENCIA,
+    ).astype(str).replace("nan", "Não informado")
+    # TP_ESTADO_CIVIL — responsabilidade familiar
+    df["estado_civil"] = df["TP_ESTADO_CIVIL"].map(MAPA_ESTADO_CIVIL).fillna("Não informado")
+    # TP_FAIXA_ETARIA — fase de vida
+    df["faixa_etaria"] = df["TP_FAIXA_ETARIA"].map(MAPA_FAIXA_ETARIA).fillna("Não informado")
+    df["faixa_etaria_grupo"] = pd.cut(
+        df["TP_FAIXA_ETARIA"],
+        bins=BINS_FAIXA_ETARIA,
+        labels=LABELS_FAIXA_ETARIA_GRUPO,
+    ).astype(str).replace("nan", "Não informado")
+
+    # --- Educação emancipadora: capital herdado ---
+    # Q001/Q002 — escolaridade do pai/mãe
+    df["escolaridade_pai"] = df["Q001"].map(MAPA_ESCOLARIDADE_PAIS).fillna("Não informado")
+    df["escolaridade_mae"] = df["Q002"].map(MAPA_ESCOLARIDADE_PAIS).fillna("Não informado")
+    # Q003/Q004 — ocupação do pai/mãe (classe de origem)
+    df["ocupacao_pai"] = df["Q003"].map(MAPA_OCUPACAO_PAIS).fillna("Não informado")
+    df["ocupacao_mae"] = df["Q004"].map(MAPA_OCUPACAO_PAIS).fillna("Não informado")
 
     # --- Grupo válido (N >= 1000) ---
     contagem = df["grupo_no"].value_counts()

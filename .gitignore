@@ -13,6 +13,15 @@ data/processed/*.parquet
 !data/processed/testes_kruskal.parquet
 !data/processed/presenca_tipo_escola.parquet
 !data/processed/notas_tipo_escola.parquet
+# Novas análises (trabalho reprodutivo + capital herdado) — usadas pelo dashboard
+!data/processed/trabalho_reprodutivo_empregado_domestico.parquet
+!data/processed/trabalho_reprodutivo_maquina_lavar.parquet
+!data/processed/trabalho_reprodutivo_faixa_pessoas.parquet
+!data/processed/capital_herdado_escolaridade_pai.parquet
+!data/processed/capital_herdado_escolaridade_mae.parquet
+!data/processed/capital_herdado_ocupacao_pai.parquet
+!data/processed/capital_herdado_ocupacao_mae.parquet
+!data/processed/capital_herdado_sintetico.parquet
 
 # Microdados do INEP (muito grandes para git)
 microdados_enem_2025/
@@ -31,6 +40,9 @@ build/
 notebooks/*.executed.ipynb
 notebooks/*.html
 notebooks/*.pdf
+
+# Gráficos de teste gerados localmente
+newplot*.png
 
 # IDE
 .vscode/

@@ -577,3 +577,77 @@ def grafico_ranking_uf(df: "pd.DataFrame", coluna: str, titulo: str,
     )
     _aplicar_layout_acessivel(fig, max(500, len(df_plot) * 22))
     return fig
+
+
+# ------------------------------------------------------------
+# 12. NOVO — Barras empilhadas de trabalho reprodutivo por UF
+# ------------------------------------------------------------
+
+def grafico_barras_empilhadas(df: "pd.DataFrame", coluna_categoria: str,
+                               titulo: str, xlabel: str,
+                               ordem: "list | None" = None,
+                               cores: "list | None" = None) -> go.Figure:
+    """
+    Barras horizontais empilhadas mostrando a composição de uma variável
+    categórica por estado.
+
+    Espera DataFrame longo com colunas: uf, categoria, pct.
+    coluna_categoria: nome legível da categoria (para o hover/label).
+    ordem: ordem das categorias na pilha (opcional).
+    cores: lista de cores (opcional; padrão terra→azul).
+    """
+    df_plot = df.copy()
+    if ordem:
+        df_plot["categoria"] = pd.Categorical(
+            df_plot["categoria"], categories=ordem, ordered=True
+        )
+    df_plot = df_plot.sort_values(["uf", "categoria"])
+
+    if cores is None:
+        # Paleta terra→azul (oprimido→privilegiado)
+        cores = ["#8B4513", "#CD853F", "#D2B48C", "#4682B4", "#1E3A5F", "#9370DB"]
+
+    fig = px.bar(
+        df_plot,
+        x="pct",
+        y="uf",
+        color="categoria",
+        orientation="h",
+        barmode="stack",
+        title=titulo,
+        labels={"pct": xlabel, "uf": "Estado", "categoria": coluna_categoria},
+        color_discrete_sequence=cores,
+    )
+    fig.update_layout(legend_title_text=coluna_categoria)
+    _aplicar_layout_acessivel(fig, max(600, len(df_plot["uf"].unique()) * 25))
+    fig.update_traces(hovertemplate="%{y}<br>%{data.name}: %{x:.1f}%<extra></extra>")
+    return fig
+
+
+# ------------------------------------------------------------
+# 13. NOVO — Scatter de correlação ecológica (capital herdado × desempenho)
+# ------------------------------------------------------------
+
+def grafico_scatter_ecologico(df: "pd.DataFrame", x: str, y: str,
+                               titulo: str, xlabel: str, ylabel: str) -> go.Figure:
+    """
+    Scatter plot ecológico (nível UF) com reta de tendência OLS.
+
+    Espera DataFrame com colunas: uf, x, y.
+    xlabel/ylabel: rótulos em português claro.
+    """
+    fig = px.scatter(
+        df, x=x, y=y, text="uf",
+        trendline="ols",
+        trendline_color_override=COR_DESTAQUE,
+        title=titulo,
+        labels={x: xlabel, y: ylabel},
+        color_discrete_sequence=[COR_ACO],
+    )
+    fig.update_traces(
+        textposition="top center",
+        marker=dict(size=9, opacity=0.85),
+        selector=dict(mode="markers+text"),
+    )
+    _aplicar_layout_acessivel(fig, 500)
+    return fig
