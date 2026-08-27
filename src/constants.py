@@ -231,12 +231,21 @@ LABELS_FAIXA_ETARIA_GRUPO = [
 # ------------------------------------------------------------
 
 # Q001/Q002 — escolaridade do pai/mãe (capital cultural herdado)
+# Categorias do INEP:
+#   A = Nunca estudou
+#   B = Não completou 4ª série/5º ano (Fundamental incompleto)
+#   C = Completou 4ª série/5º ano, não 8ª/9º (Fundamental completo)
+#   D = Completou 8ª/9º, não Ensino Médio (Médio incompleto)
+#   E = Completou Ensino Médio, não Faculdade (Médio completo, sem superior)
+#   F = Completou Faculdade, não Pós (Superior completo)
+#   G = Completou Pós-graduação
+#   H = Não sei
 MAPA_ESCOLARIDADE_PAIS = {
     "A": "Nunca estudou",
     "B": "Fundamental incompleto",
     "C": "Fundamental completo",
     "D": "Médio completo",
-    "E": "Superior incompleto",
+    "E": "Médio completo (sem superior)",
     "F": "Superior completo",
     "G": "Pós-graduação",
     "H": "Não sei",
@@ -269,7 +278,7 @@ ORDEM_ESCOLARIDADE = [
     "Fundamental incompleto",
     "Fundamental completo",
     "Médio completo",
-    "Superior incompleto",
+    "Médio completo (sem superior)",
     "Superior completo",
     "Pós-graduação",
 ]
