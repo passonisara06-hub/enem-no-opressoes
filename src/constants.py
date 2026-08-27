@@ -35,9 +35,6 @@ ARQUIVO_TESTES_KRUSKAL = DIRETORIO_DADOS / "testes_kruskal.parquet"
 # Agregados por tipo de escola (pré-calculados — evita carregar microdados)
 ARQUIVO_PRESENCA_TIPO = DIRETORIO_DADOS / "presenca_tipo_escola.parquet"
 ARQUIVO_NOTAS_TIPO = DIRETORIO_DADOS / "notas_tipo_escola.parquet"
-# Agregados das novas análises (trabalho reprodutivo + capital herdado)
-ARQUIVO_TRABALHO_REPRODUTIVO = DIRETORIO_DADOS / "trabalho_reprodutivo.parquet"
-ARQUIVO_CAPITAL_HERDADO = DIRETORIO_DADOS / "capital_herdado.parquet"
 
 # ------------------------------------------------------------
 # Grupos do nó de opressões

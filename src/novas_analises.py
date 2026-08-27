@@ -19,10 +19,8 @@ Saída:
 """
 
 import pandas as pd
-from pathlib import Path
 from constants import (
     ARQUIVO_PART_LIMPO,
-    ARQUIVO_TRABALHO_REPRODUTIVO, ARQUIVO_CAPITAL_HERDADO,
     ORDEM_OCUPACAO, ORDEM_ESCOLARIDADE,
 )
 
@@ -54,22 +52,16 @@ def calcular_trabalho_reprodutivo(df: pd.DataFrame) -> dict:
     """Métricas de trabalho reprodutivo por UF.
 
     Produz (DataFrames longos por UF):
-    - empregado_domestico: % que contrata empregado doméstico (terceirização do cuidado)
+    - empregado_domestico: % que contrata empregada doméstica (terceirização do cuidado)
     - maquina_lavar: % com máquina de lavar (infraestrutura que reduz carga doméstica)
-    - banheiro: % com banheiro (infraestrutura básica)
     - faixa_pessoas: % por nº de pessoas na residência (carga de cuidado)
-    - estado_civil: % por estado civil (responsabilidade familiar)
-    - faixa_etaria: % por faixa etária (fase de vida)
     """
     print("Calculando métricas de trabalho reprodutivo...")
 
     metricas = {
         "empregado_domestico": _pct_por_uf(df, "empregado_domestico"),
         "maquina_lavar": _pct_por_uf(df, "maquina_lavar"),
-        "banheiro": _pct_por_uf(df, "banheiro"),
         "faixa_pessoas": _pct_por_uf(df, "faixa_pessoas_residencia"),
-        "estado_civil": _pct_por_uf(df, "estado_civil"),
-        "faixa_etaria": _pct_por_uf(df, "faixa_etaria_grupo"),
     }
 
     for nome, mdf in metricas.items():
@@ -143,17 +135,18 @@ def main():
 
     # --- Trabalho reprodutivo ---
     tr = calcular_trabalho_reprodutivo(df_part)
+    out_dir = ARQUIVO_PART_LIMPO.parent
     for nome, mdf in tr.items():
-        caminho = ARQUIVO_TRABALHO_REPRODUTIVO.parent / f"trabalho_reprodutivo_{nome}.parquet"
+        caminho = out_dir / f"trabalho_reprodutivo_{nome}.parquet"
         mdf.to_parquet(caminho, index=False)
-    print(f"\nTrabalho reprodutivo salvo em: {ARQUIVO_TRABALHO_REPRODUTIVO.parent}")
+    print(f"\nTrabalho reprodutivo salvo em: {out_dir}")
 
     # --- Capital herdado ---
     ch = calcular_capital_herdado(df_part)
     for nome, mdf in ch.items():
-        caminho = ARQUIVO_CAPITAL_HERDADO.parent / f"capital_herdado_{nome}.parquet"
+        caminho = out_dir / f"capital_herdado_{nome}.parquet"
         mdf.to_parquet(caminho, index=False)
-    print(f"\nCapital herdado salvo em: {ARQUIVO_CAPITAL_HERDADO.parent}")
+    print(f"\nCapital herdado salvo em: {out_dir}")
 
 
 if __name__ == "__main__":
