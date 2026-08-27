@@ -143,22 +143,19 @@ def teste_kruskal_agregado(df_desemp: pd.DataFrame) -> pd.DataFrame:
         })
         print(f"  → nota_media_geral: H={stat:.2f}, p={p_valor:.4f}")
 
-    # Também comparar público vs privado
+    # Também testar se gap público-privado > 0 (one-sample Wilcoxon)
     col_gap = "gap_publico_privado"
     if col_gap in df_desemp.columns:
-        stat_gap, p_gap = stats.mannwhitneyu(
-            df_desemp[col_gap].dropna(),
-            [0] * len(df_desemp[col_gap].dropna()),  # teste se gap != 0
-            alternative="greater",
-        ) if len(df_desemp[col_gap].dropna()) > 0 else (np.nan, np.nan)
-
-        resultados.append({
-            "area": "gap_publico_privado",
-            "h_stat": stat_gap,
-            "p_valor": p_gap,
-            "comparacao": "Gap público vs privado por UF",
-            "n_grupos": 2,
-        })
+        gap_vals = df_desemp[col_gap].dropna()
+        if len(gap_vals) > 0:
+            stat_gap, p_gap = stats.wilcoxon(gap_vals, alternative="greater")
+            resultados.append({
+                "area": "gap_publico_privado",
+                "h_stat": stat_gap,
+                "p_valor": p_gap,
+                "comparacao": "Gap público vs privado > 0 (Wilcoxon one-sample)",
+                "n_grupos": 1,
+            })
 
     return pd.DataFrame(resultados)
 
