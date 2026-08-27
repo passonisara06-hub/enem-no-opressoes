@@ -42,7 +42,11 @@ enem_no_opressoes/
 
 ### 1. Instalar dependências
 ```bash
+# Para rodar o dashboard (produção / Streamlit Cloud)
 pip install -r requirements.txt
+
+# Para rodar também o notebook de análise (jupyter, openpyxl, etc.)
+pip install -r requirements-dev.txt
 ```
 
 ### 2. Baixar os microdados
