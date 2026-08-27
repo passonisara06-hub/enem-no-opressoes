@@ -895,6 +895,7 @@ def render_secao_educacao_emancipadora():
     st.subheader("Escolaridade da mãe por estado")
     if not df_ch_esc_mae.empty:
         df_f = filtrar_por_uf_regiao(df_ch_esc_mae, uf_selecionado, regiao_sel)
+        df_f = df_f[df_f["categoria"] != "Não sei"]
         fig = grafico_barras_empilhadas(
             df_f, "Escolaridade da mãe",
             "Até onde a mãe estudou? — por estado",
@@ -907,6 +908,7 @@ def render_secao_educacao_emancipadora():
     st.subheader("Ocupação da mãe (classe de origem) por estado")
     if not df_ch_ocu_mae.empty:
         df_f = filtrar_por_uf_regiao(df_ch_ocu_mae, uf_selecionado, regiao_sel)
+        df_f = df_f[df_f["categoria"] != "Não sei"]
         fig = grafico_barras_empilhadas(
             df_f, "Ocupação da mãe",
             "Ocupação da mãe — por estado",
