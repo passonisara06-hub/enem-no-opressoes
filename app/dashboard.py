@@ -730,9 +730,10 @@ def render_secao_o_que_revela():
         st.subheader("As diferenças são reais?")
         st.markdown("""
         <div class="insight-box">
-        ✅ <strong>Sim.</strong> Os testes estatísticos confirmam que as diferenças
-        entre estados com diferentes perfis de ausência e composição demográfica
-        **não são acidentais** — são reais e significativas.
+        Os testes estatísticos indicam que as diferenças entre estados com diferentes
+        perfis de ausência <strong>tendem a ser reais</strong> — mas com apenas 9 estados
+        por grupo, a robustez é limitada. A direção do efeito é consistente com a hipótese
+        teórica, mas novas edições do ENEM seriam necessárias para confirmar.
         </div>
         """, unsafe_allow_html=True)
 
@@ -761,6 +762,14 @@ def render_secao_o_que_revela():
         - Apenas ~36% dos inscritos informaram o tipo de escola
         - Gênero é binário no questionário INEP (apaga pessoas trans e não-binárias)
         - Raça é por autodeclaração (captura identidade, não classificação racial)
+
+        **Sobre os 3 fatores (multicolinearidade):**
+
+        Os preditores (% de mulheres negras, renda média e taxa de presença) não são
+        totalmente independentes — % de mulheres negras e renda têm correlação de −0.76.
+        Isso é teoricamente esperado: no nó de opressões de Saffioti, raça e classe se
+        constituem mutuamente, não são eixos separados. Mas significa que o modelo não
+        consegue separar o efeito "puro" de cada fator — eles se entrelaçam estruturalmente.
         """)
 
     # Download
@@ -937,6 +946,11 @@ def render_secao_educacao_emancipadora():
             Estados com mais mães de nível superior tendem a ter notas médias maiores.
             Isso <strong>não é mérito individual</strong> — é o peso do capital herdado:
             quem nasce em casa com mais estudo parte de um lugar mais alto.
+            <br><br>
+            ⚠️ <strong>Cautela:</strong> Esta correlação não controla pela renda do estado —
+            estados com mais mães de nível superior são também estados mais ricos. A renda é
+            um confunder que a análise ecológica não separa. A associação é real, mas a
+            causalidade é compartilhada entre capital herdado e classe econômica.
             </div>
             """, unsafe_allow_html=True)
 
